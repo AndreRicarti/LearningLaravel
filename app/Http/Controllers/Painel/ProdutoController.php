@@ -22,6 +22,7 @@ class ProdutoController extends Controller
      */
     public function index()
     {
+        $title = 'Listagem dos produtos';
         $products = $this->product->all();
         return view('painel.products.produto', compact('products'));
     }
@@ -171,7 +172,7 @@ class ProdutoController extends Controller
             return 'Falha ao alterar';
         }*/
 
-        $update = $this->product
+        /*$update = $this->product
                         ->where('number', '=', '123456')
                         ->update([
                                     'image' => 'c:\image',
@@ -181,6 +182,24 @@ class ProdutoController extends Controller
             return 'Alterado com sucesso2';
         } else {
             return 'Falha ao alterar';
+        }*/
+
+        /*$prod = $this->product->find(3)->delete();*/
+        /*$prod = $this->product->destroy(3);*/
+        
+        /*$prod = $this->product->find(3);
+        $delete = $prod->delete();*/
+
+        $delete = $this->product->
+                where('number', '123456')->
+                delete();
+
+        if ($delete) {
+            return 'Deletado com sucesso';
+        } else {
+            return 'Falha ao deletar';
         }
+
+
     }
 }
