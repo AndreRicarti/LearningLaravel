@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Painel;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Painel\Product;
+use App\Http\Requests\Painel\ProductFormRequest;
 
 class ProdutoController extends Controller
 {
     private $product;
+    private $totalPage = 10;
 
     public function __construct(\App\Product $product)
     {
@@ -23,7 +25,7 @@ class ProdutoController extends Controller
     public function index()
     {
         $title = 'Listagem dos produtos';
-        $products = $this->product->all();
+        $products = $this->product->paginate($this->totalPage);
         return view('painel.products.produto', compact('products'));
     }
 
@@ -34,7 +36,10 @@ class ProdutoController extends Controller
      */
     public function create()
     {
-        //
+        $title = 'Cadastrar novo produto';
+
+        $categorys = ['eletronicos', 'moveis', 'limpeza', 'banho'];
+        return view('painel.products.create-edit', compact('title', 'categorys'));
     }
 
     /**
@@ -43,9 +48,46 @@ class ProdutoController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ProductFormRequest $request)
     {
-        //
+        //dd($request->all());
+        //dd($request->only(['name', 'number']));
+        //dd($request->except(['token']));
+        //dd($request->input(['name']));
+
+        // Pega todos os dados do formulário
+        $dataForm = $request->all();
+        //$dataForm = $request->except('_token');
+
+        $dataForm['active'] = (!isset($dataForm['active'])) ? 0 : 1;
+
+        //Valida o dados
+        //$this->validate($request, $this->product->rules);
+        /*
+        $messages = [
+            'name.required' => 'O campo nome é de preenchimento obrigatório',
+            'number.numeric' => 'Precisa ser apenas números"',
+            'number.required' => 'O campo numero é de preenchimento obrigatório'
+        ];
+
+        $validate = validator($dataForm, $this->product->rules, $messages);
+        if( $validate->fails() ) {
+            return redirect()
+                            ->route('produtos.create')
+                            ->withErrors($validate)
+                            ->withInput();
+        }*/
+        //Faz o cadastro
+        $insert = $this->product->create($dataForm);
+
+        if ($insert) {
+            return redirect()->route('produtos.index');
+        } else {
+            return redirect()->route('produtos.create');
+            
+        }
+
+        //return 'cadastrando';
     }
 
     /**
@@ -56,7 +98,11 @@ class ProdutoController extends Controller
      */
     public function show($id)
     {
-        //
+        $product = $this->product->find($id);
+
+        $title = "Produto:  {$product->name}";
+
+        return view('painel.products.show', compact('product', 'title'));
     }
 
     /**
@@ -67,7 +113,14 @@ class ProdutoController extends Controller
      */
     public function edit($id)
     {
-        //
+        //Recupera o produto pelo seu id
+        $product = $this->product->find($id);
+
+        $title = "Editar Produto: {$product->name}";
+
+        $categorys = ['eletronicos', 'moveis', 'limpeza', 'banho'];
+
+        return view('painel.products.create-edit', compact('title', 'categorys', 'product'));
     }
 
     /**
@@ -77,9 +130,22 @@ class ProdutoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(ProductFormRequest $request, $id)
     {
-        //
+        //Recupera todos os dados do formulário
+        $dataForm = $request->all();
+        //Recupera o item para editar
+        $product = $this->product->find($id);
+        //Verifica se o produto está ativado
+        $dataForm['active'] = ( !isset($dataForm['active']) ) ? 0 : 1;
+        //Altera os itens
+        $update = $product->update($dataForm);
+        //Verifica se realmente editou
+        if ($update) {
+            return redirect()->route('produtos.index');
+        } else {
+            return redirect()->route('produtos.edit', $id)->with(['errors' => 'Falha ao editar']);
+        }
     }
 
     /**
@@ -90,7 +156,14 @@ class ProdutoController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $product = $this->product->find($id);
+        $delete = $product->delete();
+
+        if ($delete) {
+            return redirect()->route('produtos.index');
+        } else {
+            return redirect()->route('produtos.show', $id)->with(['errors' => 'Fala ao deletar']);
+        }
     }
 
     public function tests()
@@ -190,7 +263,7 @@ class ProdutoController extends Controller
         /*$prod = $this->product->find(3);
         $delete = $prod->delete();*/
 
-        $delete = $this->product->
+        /*$delete = $this->product->
                 where('number', '123456')->
                 delete();
 
@@ -198,8 +271,6 @@ class ProdutoController extends Controller
             return 'Deletado com sucesso';
         } else {
             return 'Falha ao deletar';
-        }
-
-
+        }*/
     }
 }
